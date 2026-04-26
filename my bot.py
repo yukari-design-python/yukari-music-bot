@@ -29,7 +29,7 @@ ydl_opts = {
             'Connection': 'keep-alive',
         },
     }
-    try:
+try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             results = ydl.extract_info(message.text, download=False)
             entries = results.get('entries', [])
