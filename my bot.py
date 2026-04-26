@@ -69,7 +69,7 @@ async def handle_universal(message: types.Message):
         
     except Exception as e:
         print(f"Xato: {e}")
-        await wait.edit_text("❌ Qidiruvda xatolik. VPN-ni tekshiring.")
+       await wait.edit_text(f"❌ Xatolik yuz berdi: {e}")
 
 @dp.callback_query(F.data.startswith("final_dl:"))
 async def process_final_dl(call: types.CallbackQuery):
