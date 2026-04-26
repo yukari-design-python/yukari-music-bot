@@ -53,23 +53,20 @@ async def handle_universal(message: types.Message):
         if not entries:
             await wait.edit_text("😔 Hech narsa topilmadi.")
             return
-        builder = InlineKeyboardBuilder()
-        try:  # <--- Buni qo'shing (57-qator atrofida)
-        builder = InlineKeyboardBuilder()
-        text = "..."
-        for i, entry in enumerate(entries[:5], 1):
-            # ... bu yerdagi hamma kodlar bitta 'tab' ichkarida bo'lishi shart
-        
-        builder.adjust(5)
-        await wait.edit_text(text, reply_markup=builder.as_markup())
-        except Exception as e:  # <--- Endi bu 69-qator xato bermaydi!
-        print(f"Xato: {e}")
-        await wait.edit_text(f"🚀 Yangi xato: {e}")
+            try:
+        builder = InlineKeyboardBuilder()  # Surilgan!
+        text = "..."                       # Surilgan!
+        for i, entry in enumerate...:      # Surilgan!
+            # ... bu yer ham o'z joyida
+            
+        builder.adjust(5)                  # Surilgan!
+        await wait.edit_text(...)          # Surilgan!
+
+    except Exception as e:                 # Bu surilmaydi, try bilan bir chiziqda turadi
 @dp.callback_query(F.data.startswith("final_dl:")
 async def process_final_dl(call: types.CallbackQuery):
     idx = call.data.split(":")[1]
     url = getattr(dp, f"url_{call.from_user.id}_{idx}", None)
-    
     await call.message.edit_text("📥 Original audio yuklanmoqda...")
     
     opts = {
