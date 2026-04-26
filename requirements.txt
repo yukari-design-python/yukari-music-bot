@@ -1,2 +1,5 @@
 aiogram
 yt-dlp
+instaloader
+requests
+urllib3
