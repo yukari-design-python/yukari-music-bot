@@ -6,7 +6,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 import yt_dlp
 
 # Bot tokenini shu yerga yozing yoki Railway Variables'dan oladi
-TOKEN = os.getenv("8479111656:AAGLuoapeIpQdSOp79xu652Fy2W4AacJlf0")
+TOKEN = "8479111656:AAGLuoapeIpQdSOp79xu652Fy2W4AacJlf0"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
