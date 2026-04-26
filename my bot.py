@@ -69,7 +69,7 @@ async def handle_universal(message: types.Message):
         except Exception as e:
         print(f"Xato: {e}")
         await wait.edit_text(f"🚀 Yangi xato: {e}")
-        @dp.callback_query(F.data.startswith("final_dl:"))
+@dp.callback_query(F.data.startswith("final_dl:")
 async def process_final_dl(call: types.CallbackQuery):
     idx = call.data.split(":")[1]
     url = getattr(dp, f"url_{call.from_user.id}_{idx}", None)
