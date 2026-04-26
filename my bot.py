@@ -53,20 +53,16 @@ async def handle_universal(message: types.Message):
         if not entries:
             await wait.edit_text("😔 Hech narsa topilmadi.")
             return
-
         builder = InlineKeyboardBuilder()
-        text = "🎵 **Siz uchun topilgan original variantlar:**\n\n"
-        
+        try:  # <--- Buni qo'shing (57-qator atrofida)
+        builder = InlineKeyboardBuilder()
+        text = "..."
         for i, entry in enumerate(entries[:5], 1):
-            title = entry.get('title', 'Nomsiz')
-            text += f"{i}. 🎹 {title[:50]}\n\n"
-            # Har bir tugma uchun ssilkani keshga saqlaymiz
-            builder.button(text=str(i), callback_data=f"final_dl:{i-1}")
-            setattr(dp, f"url_{message.from_user.id}_{i-1}", entry.get('webpage_url'))
-
+            # ... bu yerdagi hamma kodlar bitta 'tab' ichkarida bo'lishi shart
+        
         builder.adjust(5)
         await wait.edit_text(text, reply_markup=builder.as_markup())
-        except Exception as e:
+        except Exception as e:  # <--- Endi bu 69-qator xato bermaydi!
         print(f"Xato: {e}")
         await wait.edit_text(f"🚀 Yangi xato: {e}")
 @dp.callback_query(F.data.startswith("final_dl:")
