@@ -54,13 +54,13 @@ async def handle_universal(message: types.Message):
             await wait.edit_text("😔 Hech narsa topilmadi.")
             return
             try:
-        builder = InlineKeyboardBuilder()  # Surilgan!
-        text = "..."                       # Surilgan!
-        for i, entry in enumerate...:      # Surilgan!
+    builder = InlineKeyboardBuilder()  # Surilgan!
+    text = "..."                       # Surilgan!
+    for i, entry in enumerate...:      # Surilgan!
             # ... bu yer ham o'z joyida
             
-        builder.adjust(5)                  # Surilgan!
-        await wait.edit_text(...)          # Surilgan!
+    builder.adjust(5)                  # Surilgan!
+    await wait.edit_text(...)          # Surilgan!
 
     except Exception as e:                 # Bu surilmaydi, try bilan bir chiziqda turadi
 @dp.callback_query(F.data.startswith("final_dl:")
