@@ -66,11 +66,9 @@ async def handle_universal(message: types.Message):
 
         builder.adjust(5)
         await wait.edit_text(text, reply_markup=builder.as_markup())
-        
-    except Exception as e:
+        except Exception as e:
         print(f"Xato: {e}")
-       await wait.edit_text(f"❌ Xatolik yuz berdi: {e}")
-
+        await wait.edit_text(f"❌ Xatolik yuz berdi: {e}")
 @dp.callback_query(F.data.startswith("final_dl:"))
 async def process_final_dl(call: types.CallbackQuery):
     idx = call.data.split(":")[1]
