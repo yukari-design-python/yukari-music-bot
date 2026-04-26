@@ -6,7 +6,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 import yt_dlp
 
 # --- MA'LUMOTLAR ---
-BOT_TOKEN = "8479111656:AAF6t2afMFPndmrCyy0ofw7X7AoCc1A-A3Q"
+BOT_TOKEN = "8479111656:AAGLuoapeIpQdSOp79xu652Fy2W4AacJlf0"
 # --------------------
 
 bot = Bot(token=BOT_TOKEN)
