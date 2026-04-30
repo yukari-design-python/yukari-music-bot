@@ -1,80 +1,77 @@
-import os
-import logging
+import os, logging, asyncio
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import yt_dlp
 
-# Logging sozlamalari
 logging.basicConfig(level=logging.INFO)
-
-# Bot sozlamalari (Railway Variables bo'limidan oladi)
 TOKEN = os.getenv("BOT_TOKEN")
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
+# Vaqtincha ma'lumot saqlash uchun lug'at
+user_data = {}
+
 @dp.message(Command("start"))
-async def start_handler(message: types.Message):
-    await message.answer(f"Salom {message.from_user.full_name}! 👋\n\nMenga Instagram ssilkasi yoki qo'shiq nomini yozib yuboring, men sizga original variantlarni topib beraman!")
+async def start(m: types.Message):
+    await m.answer(f"Salom {m.from_user.full_name}! 👋\nSsilka yuboring yoki qo'shiq nomini yozing!")
 
 @dp.message()
-async def universal_handler(message: types.Message):
-    if not message.text:
-        return
-
-    wait = await message.answer("🔍 Qidirilmoqda, kuting...")
+async def search(m: types.Message):
+    if not m.text: return
+    wait = await m.answer("🔍 Qidirilmoqda...")
     
-    # Ssilka yoki matn ekanligini aniqlash
-    if "instagram.com" in message.text or "youtube.com" in message.text or "youtu.be" in message.text:
-        search_query = message.text
-    else:
-        # Matn bo'lsa, YouTube'dan eng sifatli audiolarni qidiradi
-        search_query = f"ytsearch5:{message.text} audio"
-
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'quiet': True,
-        'no_warnings': True,
-        'extract_flat': True,
-        'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-        },
-    }
-
+    query = m.text if "http" in m.text else f"ytsearch5:{m.text} audio"
+    
+    opts = {'format': 'bestaudio/best', 'quiet': True, 'no_warnings': True}
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            results = ydl.extract_info(search_query, download=False)
-            
-            if 'entries' in results:
-                entries = [e for e in results['entries'] if e is not None]
-            else:
-                entries = [results]
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            res = ydl.extract_info(query, download=False)
+            entries = res.get('entries', [res]) if 'entries' in res or 'url' in res else []
 
         if not entries:
-            await wait.edit_text("😔 Hech narsa topilmadi. Iltimos, nomni aniqroq yozing yoki ssilkani tekshiring.")
-            return
+            return await wait.edit_text("😔 Topilmadi.")
 
         builder = InlineKeyboardBuilder()
-        text = "🎵 **Siz uchun topilgan original variantlar:**\n\n"
-        
-        for i, entry in enumerate(entries[:5], 1):
+        text = "🎵 **Topilgan variantlar:**\n\n"
+        for i, entry in enumerate(entries[:5]):
+            url = entry.get('webpage_url') or entry.get('url')
             title = entry.get('title', 'Nomsiz')
-            # Natijalarni ro'yxat qilib chiqarish
-            text += f"{i}. 🎶 {title[:60]}...\n\n"
-            builder.button(text=str(i), callback_data=f"final_dl:{i-1}")
-            # Ma'lumotlarni vaqtincha saqlash
-            setattr(dp, f"url_{message.from_user.id}_{i-1}", entry.get('webpage_url'))
+            text += f"{i+1}. 🎶 {title[:50]}\n\n"
+            builder.button(text=str(i+1), callback_data=f"dl_{i}")
+            user_data[f"{m.from_user.id}_{i}"] = url
             
         builder.adjust(5)
         await wait.edit_text(text, reply_markup=builder.as_markup())
-
     except Exception as e:
-        logging.error(f"Xato yuz berdi: {e}")
-        await wait.edit_text(f"🚀 Xatolik yuz berdi. Iltimos, birozdan so'ng qayta urining.")
+        await wait.edit_text(f"❌ Xato: {e}")
 
-async def main():
-    await dp.start_polling(bot)
+@dp.callback_query(F.data.startswith("dl_"))
+async def download(call: types.CallbackQuery):
+    idx = call.data.split("_")[1]
+    url = user_data.get(f"{call.from_user.id}_{idx}")
+    if not url: return await call.answer("Xatolik! Qaytadan qidirib ko'ring.", show_alert=True)
+    
+    await call.message.edit_text("📥 Yuklanmoqda, iltimos kuting...")
+    
+    file_path = f"{call.from_user.id}.mp3"
+    opts = {
+        'format': 'bestaudio/best',
+        'outtmpl': file_path,
+        'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}],
+        'quiet': True
+    }
+    
+    try:
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            ydl.download([url])
+        
+        await call.message.answer_audio(audio=types.FSInputFile(file_path))
+        await call.message.delete()
+        if os.path.exists(file_path): os.remove(file_path)
+    except Exception as e:
+        await call.message.edit_text(f"❌ Yuklab bo'lmadi: {e}")
+        if os.path.exists(file_path): os.remove(file_path)
 
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+async def main(): await dp.start_polling(bot)
+if __name__ == "__main__": asyncio.run(main())
