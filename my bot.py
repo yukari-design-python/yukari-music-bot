@@ -17,7 +17,7 @@ async def start_handler(message: types.Message):
 @dp.message(F.text.contains("instagram.com"))
 async def insta_handler(message: types.Message):
     wait = await message.answer("🔍 Qidirilmoqda, kuting...")
-ydl_opts = {
+    ydl_opts = {
         'quiet': True,
         'no_warnings': True,
         'extract_flat': True,
@@ -28,7 +28,7 @@ ydl_opts = {
             'Connection': 'keep-alive',
         },
     }
-try:
+    try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             results = ydl.extract_info(message.text, download=False)
             entries = results.get('entries', [])
@@ -39,7 +39,6 @@ try:
 
         builder = InlineKeyboardBuilder()
         text = "🎵 **Siz uchun topilgan original variantlar:**\n\n"
-        
         for i, entry in enumerate(entries[:5], 1):
             title = entry.get('title', 'Nomsiz')
             text += f"{i}. 🎬 {title[:50]}\n\n"
@@ -48,7 +47,7 @@ try:
             
         builder.adjust(5)
         await wait.edit_text(text, reply_markup=builder.as_markup())
-except Exception as e:
+    except Exception as e:
         print(f"Xato: {e}")
         await wait.edit_text(f"🚀 Xatolik yuz berdi: {e}")
 @dp.callback_query(F.data.startswith("final_dl:"))
