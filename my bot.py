@@ -5,7 +5,6 @@ from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import yt_dlp
 
-# Bot tokenini shu yerga yozing yoki Railway Variables'dan oladi
 TOKEN = "8479111656:AAGLuoapeIpQdSOp79xu652Fy2W4AacJlf0"
 
 bot = Bot(token=TOKEN)
@@ -44,13 +43,15 @@ try:
         for i, entry in enumerate(entries[:5], 1):
             title = entry.get('title', 'Nomsiz')
             text += f"{i}. 🎬 {title[:50]}\n\n"
-            # Har bir tugma uchun ssilkani keshga saqlaymiz
             builder.button(text=str(i), callback_data=f"final_dl:{i-1}")
             setattr(dp, f"url_{message.from_user.id}_{i-1}", entry.get('webpage_url'))
             
         builder.adjust(5)
         await wait.edit_text(text, reply_markup=builder.as_markup())
 
+    except Exception as e:
+        print(f"Xato: {e}")
+        await wait.edit_text(f"🚀 Xatolik yuz berdi: {e}")
     except Exception as e:
         print(f"Xato: {e}")
         await wait.edit_text(f"🚀 Xatolik yuz berdi: {e}")
