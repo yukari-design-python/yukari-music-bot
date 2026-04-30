@@ -58,7 +58,9 @@ async def process_final_dl(call: types.CallbackQuery):
     if not url:
         await call.answer("❌ Ssilka muddati tugagan.", show_alert=True)
         return
-
+@dp.message()
+async def echo_handler(message: types.Message):
+    await message.answer("Men hozircha faqat Instagram ssilkalarini tushunaman. Iltimos, ssilka yuboring! 😊")
     await call.message.edit_text("⌛ Audio yuklanmoqda, kuting...")
 
     opts = {
