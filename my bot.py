@@ -53,25 +53,24 @@ async def download(call: types.CallbackQuery):
     if not url: return await call.answer("Xatolik! Qaytadan qidirib ko'ring.", show_alert=True)
     
     await call.message.edit_text("📥 Yuklanmoqda, iltimos kuting...")
-    
-    file_path = f"{call.from_user.id}.mp3"
+file_path = f"{call.from_user.id}.m4a"
     opts = {
         'format': 'bestaudio/best',
         'outtmpl': file_path,
-        'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}],
-        'quiet': True
+        'quiet': True,
+        'no_warnings': True
     }
     
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
         
-        await call.message.answer_audio(audio=types.FSInputFile(file_path))
+        audio = types.FSInputFile(file_path)
+        await call.message.answer_audio(audio=audio)
         await call.message.delete()
         if os.path.exists(file_path): os.remove(file_path)
     except Exception as e:
         await call.message.edit_text(f"❌ Yuklab bo'lmadi: {e}")
         if os.path.exists(file_path): os.remove(file_path)
-
 async def main(): await dp.start_polling(bot)
 if __name__ == "__main__": asyncio.run(main())
