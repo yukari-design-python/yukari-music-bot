@@ -53,33 +53,30 @@ async def download(call: types.CallbackQuery):
     idx = call.data.split("_")[1]
     url = user_data.get(f"{call.from_user.id}_{idx}")
     if not url: return await call.answer("Xatolik!", show_alert=True)
-    
     await call.message.edit_text("📥 Yuklanmoqda...")
-    file_path = f"{call.from_user.id}.m4a"
     
+    # Qo'shiq nomini olish
+    try:
+        with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
+            info = ydl.extract_info(url, download=False)
+            title = info.get('title', 'music')
+    except:
+        title = "music"
+
+    file_path = f"{call.from_user.id}.m4a"   
     opts = {
         'format': 'bestaudio/best',
         'outtmpl': file_path,
         'quiet': True,
         'no_warnings': True,
-        'nocheckcertificate': True,
         'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
-    
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
         
-        audio = types.FSInputFile(file_path)
-        await call.message.answer_audio(audio=audio)
+        audio = types.FSInputFile(file_path, filename=f"{title}.m4a")
+        await call.message.answer_audio(audio=audio, title=title)
+        
         await call.message.delete()
         if os.path.exists(file_path): os.remove(file_path)
-    except Exception as e:
-        await call.message.edit_text(f"❌ Xato: {e}")
-        if os.path.exists(file_path): os.remove(file_path)
-
-async def main():
-    await dp.start_polling(bot)
-
-if __name__ == "__main__":
-    asyncio.run(main())
