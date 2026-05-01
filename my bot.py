@@ -5,7 +5,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 import yt_dlp
 
 logging.basicConfig(level=logging.INFO)
-TOKEN = os.getenv("8479111656:AAHZ306sKkuA3BuLELinEaZVun7iYQUBHZ8")
+TOKEN =("8479111656:AAHZ306sKkuA3BuLELinEaZVun7iYQUBHZ8")
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
