@@ -5,6 +5,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 import yt_dlp
 
 logging.basicConfig(level=logging.INFO)
+
 TOKEN = "8479111656:AAHZ306sKkuA3BuLELinEaZVun7iYQUBHZ8"
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
@@ -13,85 +14,75 @@ user_data = {}
 
 @dp.message(Command("start"))
 async def start(m: types.Message):
-    await m.answer(f"Salom {m.from_user.full_name}! 👋\nQo'shiq nomini yozing, men uni topib beraman!")
+    await m.answer(
+        f"Salom {m.from_user.full_name}! 👋\n\n"
+        "Men har qanday platformadan (TikTok, Insta, Pinterest va b.) "
+        "video va musiqalarni yuklab beraman. Ssilka yuboring!"
+    )
 
 @dp.message()
-async def search(m: types.Message):
-    if not m.text: return
-    wait = await m.answer("🔍 Qidirilmoqda...")
-    query = m.text if "http" in m.text else f"ytsearch5:{m.text} audio"
-    
-    opts = {
-        'format': 'bestaudio/best',
-        'quiet': True,
-        'no_warnings': True,
-        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-    }
-    
-    try:
-        with yt_dlp.YoutubeDL(opts) as ydl:
-            res = ydl.extract_info(query, download=False)
-            entries = res.get('entries', [res]) if 'entries' in res or 'url' in res else []
-        
-        if not entries:
-            return await wait.edit_text("😔 Topilmadi.")
-        
-        builder = InlineKeyboardBuilder()
-        text = "🎵 **Topilgan variantlar:**\n\n"
-        for i, entry in enumerate(entries[:5]):
-            url = entry.get('webpage_url') or entry.get('url')
-            title = entry.get('title', 'Nomsiz')
-            text += f"{i+1}. 🎶 {title[:50]}\n\n"
-            builder.button(text=str(i+1), callback_data=f"dl_{i}")
-            user_data[f"{m.from_user.id}_{i}"] = url
-        
-        builder.adjust(5)
-        await wait.edit_text(text, reply_markup=builder.as_markup())
-    except Exception as e:
-        await wait.edit_text(f"❌ Qidiruvda xato: {e}")
+async def handle_message(m: types.Message):
+    if not m.text or "http" not in m.text:
+        return await m.answer("Iltimos, video yoki musiqa ssilkasini yuboring!")
 
-@dp.callback_query(F.data.startswith("dl_"))
-async def download(call: types.CallbackQuery):
-    idx = call.data.split("_")[1]
-    url = user_data.get(f"{call.from_user.id}_{idx}")
-    if not url: return await call.answer("Xatolik! Qidiring.", show_alert=True)
+    wait = await m.answer("🔎 Ssilka tahlil qilinmoqda...")
+    url = m.text
     
-    await call.message.edit_text("📥 Yuklanmoqda...")
+    # Format tanlash tugmalari
+    builder = InlineKeyboardBuilder()
+    builder.button(text="🎬 Video (MP4)", callback_data="down_vid")
+    builder.button(text="🎵 Audio (MP3)", callback_data="down_aud")
     
-    file_path = f"{call.from_user.id}.m4a"
+    user_data[f"{m.from_user.id}_url"] = url
+    await wait.edit_text("Qaysi formatda yuklamoqchisiz?", reply_markup=builder.as_markup())
+
+@dp.callback_query(F.data.startswith("down_"))
+async def process_download(call: types.CallbackQuery):
+    mode = call.data.split("_")[1]
+    url = user_data.get(f"{call.from_user.id}_url")
+    
+    if not url:
+        return await call.answer("Xatolik! Ssilkani qaytadan yuboring.", show_alert=True)
+    
+    await call.message.edit_text("📥 Yuklanmoqda... (Katta videolar biroz vaqt olishi mumkin)")
+    
+    ext = "mp4" if mode == "vid" else "mp3"
+    file_path = f"{call.from_user.id}_{mode}.{ext}"
+    
+    # YouTube blokidan qochish va boshqa saytlar uchun eng kuchli sozlamalar
     opts = {
-        'format': 'bestaudio/best',
+        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' if mode == "vid" else 'bestaudio/best',
         'outtmpl': file_path,
         'quiet': True,
         'no_warnings': True,
         'nocheckcertificate': True,
-        # YouTube blokirovkasini aylanib o'tish:
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['web', 'mweb', 'android', 'ios'],
-                'skip': ['dash', 'hls']
-            }
-        },
-        'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-us,en;q=0.5',
-            'Sec-Fetch-Mode': 'navigate'
-        }
+        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'referer': 'https://www.google.com/',
+        'add_header': [
+            'Accept-Language: en-US,en;q=0.9',
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'
+        ]
     }
     
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=True)
-            title = info.get('title', 'music').replace("/", "_")
+            title = info.get('title', 'file').replace("/", "_")
+
+        input_file = types.FSInputFile(file_path, filename=f"{title}.{ext}")
         
-        audio = types.FSInputFile(file_path, filename=f"{title}.m4a")
-        await call.message.answer_audio(audio=audio, title=title)
+        if mode == "vid":
+            await call.message.answer_video(video=input_file, caption=f"✅ {title}")
+        else:
+            await call.message.answer_audio(audio=input_file, title=title)
+            
         await call.message.delete()
     except Exception as e:
-        await call.message.edit_text(f"❌ YouTube blokladi. Boshqa qo'shiq ko'ring.")
+        logging.error(f"Xato: {e}")
+        await call.message.edit_text("❌ Kechirasiz, ushbu ssilkani yuklab bo'lmadi. Saytda cheklov bo'lishi mumkin.")
     finally:
-        if os.path.exists(file_path): os.remove(file_path)
+        if os.path.exists(file_path):
+            os.remove(file_path)
 
 async def main():
     await dp.start_polling(bot)
