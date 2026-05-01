@@ -5,11 +5,10 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 import yt_dlp
 
 logging.basicConfig(level=logging.INFO)
-TOKEN = os.getenv("BOT_TOKEN")
+TOKEN = os.getenv("8479111656:AAGLuoapeIpQdSOp79xu652Fy2W4AacJlf0")
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Vaqtincha ma'lumot saqlash uchun lug'at
 user_data = {}
 
 @dp.message(Command("start"))
@@ -20,18 +19,14 @@ async def start(m: types.Message):
 async def search(m: types.Message):
     if not m.text: return
     wait = await m.answer("🔍 Qidirilmoqda...")
-    
     query = m.text if "http" in m.text else f"ytsearch5:{m.text} audio"
-    
     opts = {'format': 'bestaudio/best', 'quiet': True, 'no_warnings': True}
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
             res = ydl.extract_info(query, download=False)
             entries = res.get('entries', [res]) if 'entries' in res or 'url' in res else []
-
         if not entries:
             return await wait.edit_text("😔 Topilmadi.")
-
         builder = InlineKeyboardBuilder()
         text = "🎵 **Topilgan variantlar:**\n\n"
         for i, entry in enumerate(entries[:5]):
@@ -40,7 +35,6 @@ async def search(m: types.Message):
             text += f"{i+1}. 🎶 {title[:50]}\n\n"
             builder.button(text=str(i+1), callback_data=f"dl_{i}")
             user_data[f"{m.from_user.id}_{i}"] = url
-            
         builder.adjust(5)
         await wait.edit_text(text, reply_markup=builder.as_markup())
     except Exception as e:
@@ -50,27 +44,22 @@ async def search(m: types.Message):
 async def download(call: types.CallbackQuery):
     idx = call.data.split("_")[1]
     url = user_data.get(f"{call.from_user.id}_{idx}")
-    if not url: return await call.answer("Xatolik! Qaytadan qidirib ko'ring.", show_alert=True)
-    
-    await call.message.edit_text("📥 Yuklanmoqda, iltimos kuting...")
-file_path = f"{call.from_user.id}.m4a"
-    opts = {
-        'format': 'bestaudio/best',
-        'outtmpl': file_path,
-        'quiet': True,
-        'no_warnings': True
-    }
-    
+    if not url: return await call.answer("Xatolik!", show_alert=True)
+    await call.message.edit_text("📥 Yuklanmoqda...")
+    file_path = f"{call.from_user.id}.m4a"
+    opts = {'format': 'bestaudio/best', 'outtmpl': file_path, 'quiet': True}
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
-        
-        audio = types.FSInputFile(file_path)
-        await call.message.answer_audio(audio=audio)
+        await call.message.answer_audio(audio=types.FSInputFile(file_path))
         await call.message.delete()
         if os.path.exists(file_path): os.remove(file_path)
     except Exception as e:
-        await call.message.edit_text(f"❌ Yuklab bo'lmadi: {e}")
+        await call.message.edit_text(f"❌ Xato: {e}")
         if os.path.exists(file_path): os.remove(file_path)
-async def main(): await dp.start_polling(bot)
-if __name__ == "__main__": asyncio.run(main())
+
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
