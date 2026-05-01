@@ -47,7 +47,13 @@ async def download(call: types.CallbackQuery):
     if not url: return await call.answer("Xatolik!", show_alert=True)
     await call.message.edit_text("📥 Yuklanmoqda...")
     file_path = f"{call.from_user.id}.m4a"
-    opts = {'format': 'bestaudio/best', 'outtmpl': file_path, 'quiet': True}
+   opts = {
+        'format': 'bestaudio/best',
+        'quiet': True,
+        'no_warnings': True,
+        'nocheckcertificate': True,
+        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
