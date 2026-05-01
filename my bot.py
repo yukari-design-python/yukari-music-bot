@@ -6,7 +6,7 @@ import yt_dlp
 
 logging.basicConfig(level=logging.INFO)
 
-TOKEN = "8479111656:AAHZ306sKkuA3BuLELinEaZVun7iYQUBHZ8"
+TOKEN = "8479111656:AAHb8B7Bd03hyQC_ii5GzjV6yIVLSJw0PCA"
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
